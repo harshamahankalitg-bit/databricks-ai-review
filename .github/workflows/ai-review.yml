@@ -1,28 +1,18 @@
-name: Python Test + Coverage
+name: Call Lambda
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  test:
+  call-lambda:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+    - uses: actions/checkout@v3
 
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-
-    - name: Install Requirements
+    - name: Call AWS Lambda
       run: |
-        pip install -r requirements.txt
-        pip install pytest coverage
-
-    - name: Run Tests
-      run: |
-        coverage run -m pytest || true
-        coverage report
+        curl -X POST ${{ secrets.LAMBDA_URL }} \
+        -H "Content-Type: application/json" \
+        -d '{"message":"Hello from GitHub"}'
