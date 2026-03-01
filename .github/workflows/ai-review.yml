@@ -1,0 +1,35 @@
+name: Bedrock AI Review
+
+on:
+  pull_request:
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v3
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.10
+
+    - name: Install Dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Run Tests + Coverage
+      run: |
+        coverage run -m pytest || true
+        coverage json
+
+    - name: Send to Lambda
+      run: |
+        CODE=$(cat src/job.py | jq -Rs .)
+        COVERAGE=$(cat coverage.json | jq -Rs .)
+
+        curl -X POST ${{ secrets.LAMBDA_URL }} \
+        -H "Content-Type: application/json" \
+        -d "{\"code\": $CODE, \"coverage\": $COVERAGE}"
